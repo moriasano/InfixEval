@@ -23,6 +23,13 @@ trait constants {
 
     (x * y).abs / gcd(x, y)
   }
+  def getTokenType(token: String): String = {
+    /** Least Common Multiple**/
+    // TODO: This function currently assumes alot. Add error handling and what not
+
+    if(symbols.contains(token)) { return "operator" }
+    "number"
+  }
 }
 
 object InfixEval extends constants {
@@ -41,12 +48,12 @@ object InfixEval extends constants {
 
     val infixExpression = getInfix()
     val postfixExpression = RPN.ShuntingYard.convertFromInfix(infixExpression)
-    // val sExpression = ...
+    val prefixExpression = RPN.ShuntingYard.toPolish(postfixExpression)
     val numericValue = RPN.ShuntingYard.eval(postfixExpression)
 
-    println(infixExpression)
-    println(postfixExpression)
-    println(numericValue)
+    println("\nPostfix Expression:  " + postfixExpression)
+    println(  "Prefix Expression:   " + prefixExpression)
+    println(  "Numeric Result:      " + numericValue)
 
     // Tail recursion for looping
     if(Array("yes", "y").contains(console.readLine("Again? (y/n)").toLowerCase)) { go() }
@@ -128,6 +135,7 @@ object RPN extends constants {
           case ">" => stack.push(gcd(stack.pop, stack.pop))
           case "<" => stack.push(lcm(stack.pop, stack.pop))
           // case "!" =>
+          case _ => throw new RuntimeException
         }
         else stack.push(token.toInt)
       }
@@ -137,10 +145,12 @@ object RPN extends constants {
       /** Convert the RPN to Polish (Prefix notation) **/
 
       val stack: Stack[String] = new Stack[String]
-      for (token <- rpnExpression.split(" ")) {
-
+      for (token <- rpnExpression.split(" ")) getTokenType(token) match {
+        case "number" => stack.push(token)
+        case "operator" => val y = stack.pop; val x = stack.pop; stack.push(token + " " + x + " " + y)
+        case _ => throw new RuntimeException
       }
-
+      stack.pop
     }
   }
 }
