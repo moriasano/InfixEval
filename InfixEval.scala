@@ -49,14 +49,16 @@ object InfixEval extends constants {
     val infixExpression = getInfix()
     val postfixExpression = RPN.ShuntingYard.convertFromInfix(infixExpression)
     val prefixExpression = RPN.ShuntingYard.toPolish(postfixExpression)
+    val sExpression = RPN.ShuntingYard.toSExpression(postfixExpression)
     val numericValue = RPN.ShuntingYard.eval(postfixExpression)
 
     println("\nPostfix Expression:  " + postfixExpression)
     println(  "Prefix Expression:   " + prefixExpression)
+    println("\nS-Expression:        " + sExpression)
     println(  "Numeric Result:      " + numericValue)
 
     // Tail recursion for looping
-    if(Array("yes", "y").contains(console.readLine("Again? (y/n)").toLowerCase)) { go() }
+    if(Array("yes", "y").contains(console.readLine("\nAgain? (y/n)").toLowerCase)) { go() }
   }
 
   def getInfix(): String = {
@@ -65,7 +67,7 @@ object InfixEval extends constants {
     val expression = console.readLine("Enter an expression: ")
 
     // Check that every character is in 'numbers' or 'symbols'
-    if(!expression.forall(c => (numbers ::: symbols).contains(c.toString))) {
+    if(!expression.forall(c => (numbers ::: symbols ::: List(" ")).contains(c.toString))) {
       println("Invalid input. Try again.")
       getInfix()
     }
@@ -148,6 +150,17 @@ object RPN extends constants {
       for (token <- rpnExpression.split(" ")) getTokenType(token) match {
         case "number" => stack.push(token)
         case "operator" => val y = stack.pop; val x = stack.pop; stack.push(token + " " + x + " " + y)
+        case _ => throw new RuntimeException
+      }
+      stack.pop
+    }
+    def toSExpression(rpnExpression: String): String = {
+      /** Convert the RPN to S-Expression **/
+
+      val stack: Stack[String] = new Stack[String]
+      for (token <- rpnExpression.split(" ")) getTokenType(token) match {
+        case "number" => stack.push("(" + token + ")")
+        case "operator" => val y = stack.pop; val x = stack.pop; stack.push("(" + token + " " + x + " " + y + ")")
         case _ => throw new RuntimeException
       }
       stack.pop
